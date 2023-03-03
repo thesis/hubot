@@ -28,32 +28,6 @@ const HUBOT_DOCUMENTATION_SECTIONS = [
   "urls",
 ]
 
-type KeysMatching<T, V> = {
-  [K in keyof T]: T[K] extends V ? K : never
-}[keyof T]
-
-type FunctionKeys<T> = KeysMatching<T, (...args: any[]) => any>
-
-type FunctionReturnOnly<T> = { [Prop in FunctionKeys<T>]: T[Prop] }
-
-function wrap<
-  WrapperBaseType,
-  FunctionNameType extends keyof WrapperBaseType,
-  FunctionReturnType extends WrapperBaseType[FunctionNameType]
->(base: WrapperBaseType, fn: FunctionNameType): FunctionReturnType {
-  const baseFunction = base[fn]
-
-  return (
-    ...args: Parameters<RealFunctionType>
-  ): ReturnType<WrapperBaseType[FunctionNameType]> =>
-    baseFunction.apply(base, args)
-}
-
-type Booyan = KeysMatching<EventEmitter, (...args: any[]) => any>
-type Yam = EventEmitter[Booyan]
-
-wrap(new EventEmitter(), "addListener")
-
 class Robot {
   public version = "0"
 
@@ -725,7 +699,6 @@ class Robot {
     this.adapter.send.apply(this.adapter, [envelope].concat(strings))
   }
 
-  public on = wrap(this.events, "on")
   // Public: A wrapper around the EventEmitter API to make usage
   // semantically better.
   //
@@ -734,11 +707,7 @@ class Robot {
   //            when event happens.
   //
   // Returns nothing.
-  /* on(event: typeof this.events) {
-    const args = [].slice.call(arguments, 1);
-
-    this.events.on.apply(this.events, [event].concat(args));
-  } */
+  public on = this.events.on.bind(this.events)
 
   // Public: A wrapper around the EventEmitter API to make usage
   // semantically better.
@@ -748,11 +717,7 @@ class Robot {
   //            when event happens.
   //
   // Returns nothing.
-  once(event, listener: (event: string) => void /* , ...args */) {
-    const args = [].slice.call(arguments, 1)
-
-    this.events.once.apply(this.events, [event].concat(args))
-  }
+  public once = this.events.once.bind(this.events)
 
   // Public: A wrapper around the EventEmitter API to make usage
   // semantically better.
@@ -761,11 +726,7 @@ class Robot {
   // args...  - Arguments emitted by the event
   //
   // Returns nothing.
-  emit(event /* , ...args */) {
-    const args = [].slice.call(arguments, 1)
-
-    this.events.emit.apply(this.events, [event].concat(args))
-  }
+  public emit = this.events.emit.bind(this.events)
 
   // Public: Kick off the event loop for the adapter
   //
