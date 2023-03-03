@@ -1,94 +1,92 @@
-'use strict'
-
 /* global describe, beforeEach, it */
 
-const chai = require('chai')
-const sinon = require('sinon')
-chai.use(require('sinon-chai'))
+const chai = require("chai")
+const sinon = require("sinon")
+chai.use(require("sinon-chai"))
 
-const expect = chai.expect
+const { expect } = chai
 
-const Adapter = require('../src/adapter')
+const Adapter = require("../src/adapter")
 
-describe('Adapter', function () {
+describe("Adapter", () => {
   beforeEach(function () {
-    this.robot = {receive: sinon.spy()}
+    this.robot = { receive: sinon.spy() }
   })
 
   // this one is hard, as it requires files
-  it('can load adapter by name')
+  it("can load adapter by name")
 
-  describe('Public API', function () {
+  describe("Public API", () => {
     beforeEach(function () {
       this.adapter = new Adapter(this.robot)
     })
 
-    it('assigns robot', function () {
+    it("assigns robot", function () {
       expect(this.adapter.robot).to.equal(this.robot)
     })
 
-    describe('send', function () {
-      it('is a function', function () {
-        expect(this.adapter.send).to.be.a('function')
+    describe("send", () => {
+      it("is a function", function () {
+        expect(this.adapter.send).to.be.a("function")
       })
 
-      it('does nothing', function () {
-        this.adapter.send({}, 'nothing')
-      })
-    })
-
-    describe('reply', function () {
-      it('is a function', function () {
-        expect(this.adapter.reply).to.be.a('function')
-      })
-
-      it('does nothing', function () {
-        this.adapter.reply({}, 'nothing')
+      it("does nothing", function () {
+        this.adapter.send({}, "nothing")
       })
     })
 
-    describe('topic', function () {
-      it('is a function', function () {
-        expect(this.adapter.topic).to.be.a('function')
+    describe("reply", () => {
+      it("is a function", function () {
+        expect(this.adapter.reply).to.be.a("function")
       })
 
-      it('does nothing', function () {
-        this.adapter.topic({}, 'nothing')
-      })
-    })
-
-    describe('play', function () {
-      it('is a function', function () {
-        expect(this.adapter.play).to.be.a('function')
-      })
-
-      it('does nothing', function () {
-        this.adapter.play({}, 'nothing')
+      it("does nothing", function () {
+        this.adapter.reply({}, "nothing")
       })
     })
 
-    describe('run', function () {
-      it('is a function', function () {
-        expect(this.adapter.run).to.be.a('function')
+    describe("topic", () => {
+      it("is a function", function () {
+        expect(this.adapter.topic).to.be.a("function")
       })
 
-      it('does nothing', function () {
+      it("does nothing", function () {
+        this.adapter.topic({}, "nothing")
+      })
+    })
+
+    describe("play", () => {
+      it("is a function", function () {
+        expect(this.adapter.play).to.be.a("function")
+      })
+
+      it("does nothing", function () {
+        this.adapter.play({}, "nothing")
+      })
+    })
+
+    describe("run", () => {
+      it("is a function", function () {
+        expect(this.adapter.run).to.be.a("function")
+      })
+
+      it("does nothing", function () {
         this.adapter.run()
       })
     })
 
-    describe('close', function () {
-      it('is a function', function () {
-        expect(this.adapter.close).to.be.a('function')
+    describe("close", () => {
+      it("is a function", function () {
+        expect(this.adapter.close).to.be.a("function")
       })
 
-      it('does nothing', function () {
+      it("does nothing", function () {
         this.adapter.close()
       })
     })
   })
 
-  it('dispatches received messages to the robot', function () {
+  it("dispatches received messages to the robot", function () {
     this.robot.receive = sinon.spy()
     this.adapter = new Adapter(this.robot)
     this.message = sinon.spy()

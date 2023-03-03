@@ -1,12 +1,10 @@
-'use strict'
-
-const EventEmitter = require('events').EventEmitter
+const { EventEmitter } = require("events")
 
 class Adapter extends EventEmitter {
   // An adapter is a specific interface to a chat source for robots.
   //
   // robot - A Robot instance.
-  constructor (robot) {
+  constructor(robot) {
     super()
     this.robot = robot
   }
@@ -17,7 +15,7 @@ class Adapter extends EventEmitter {
   // strings  - One or more Strings for each message to send.
   //
   // Returns nothing.
-  send (envelope/* , ...strings */) {}
+  send(envelope /* , ...strings */) {}
 
   // Public: Raw method for sending emote data back to the chat source.
   // Defaults as an alias for send
@@ -26,7 +24,7 @@ class Adapter extends EventEmitter {
   // strings  - One or more Strings for each message to send.
   //
   // Returns nothing.
-  emote (envelope/* , ...strings */) {
+  emote(envelope /* , ...strings */) {
     const strings = [].slice.call(arguments, 1)
     return this.send.apply(this, [envelope].concat(strings))
   }
@@ -38,7 +36,7 @@ class Adapter extends EventEmitter {
   // strings  - One or more Strings for each reply to send.
   //
   // Returns nothing.
-  reply (envelope/* , ...strings */) {}
+  reply(envelope /* , ...strings */) {}
 
   // Public: Raw method for setting a topic on the chat source. Extend this.
   //
@@ -46,7 +44,7 @@ class Adapter extends EventEmitter {
   // strings  - One more more Strings to set as the topic.
   //
   // Returns nothing.
-  topic (envelope/* , ...strings */) {}
+  topic(envelope /* , ...strings */) {}
 
   // Public: Raw method for playing a sound in the chat source. Extend this.
   //
@@ -54,46 +52,52 @@ class Adapter extends EventEmitter {
   // strings  - One or more strings for each play message to send.
   //
   // Returns nothing
-  play (envelope/* , ...strings */) {}
+  play(envelope /* , ...strings */) {}
 
   // Public: Raw method for invoking the bot to run. Extend this.
   //
   // Returns nothing.
-  run () {}
+  run() {}
 
   // Public: Raw method for shutting the bot down. Extend this.
   //
   // Returns nothing.
-  close () {}
+  close() {}
 
   // Public: Dispatch a received message to the robot.
   //
   // Returns nothing.
-  receive (message) {
+  receive(message) {
     this.robot.receive(message)
   }
 
   // Public: Get an Array of User objects stored in the brain.
   //
   // Returns an Array of User objects.
-  users () {
-    this.robot.logger.warning('@users() is going to be deprecated in 3.0.0 use @robot.brain.users()')
+  users() {
+    this.robot.logger.warning(
+      "@users() is going to be deprecated in 3.0.0 use @robot.brain.users()"
+    )
     return this.robot.brain.users()
   }
 
   // Public: Get a User object given a unique identifier.
   //
   // Returns a User instance of the specified user.
-  userForId (id, options) {
-    this.robot.logger.warning('@userForId() is going to be deprecated in 3.0.0 use @robot.brain.userForId()')
+  userForId(id, options) {
+    this.robot.logger.warning(
+      "@userForId() is going to be deprecated in 3.0.0 use @robot.brain.userForId()"
+    )
     return this.robot.brain.userForId(id, options)
   }
 
   // Public: Get a User object given a name.
   //
   // Returns a User instance for the user with the specified name.
-  userForName (name) {
-    this.robot.logger.warning('@userForName() is going to be deprecated in 3.0.0 use @robot.brain.userForName()')
+  userForName(name) {
+    this.robot.logger.warning(
+      "@userForName() is going to be deprecated in 3.0.0 use @robot.brain.userForName()"
+    )
     return this.robot.brain.userForName(name)
   }
 
@@ -102,8 +106,10 @@ class Adapter extends EventEmitter {
   // nicknames, etc.
   //
   // Returns an Array of User instances matching the fuzzy name.
-  usersForRawFuzzyName (fuzzyName) {
-    this.robot.logger.warning('@userForRawFuzzyName() is going to be deprecated in 3.0.0 use @robot.brain.userForRawFuzzyName()')
+  usersForRawFuzzyName(fuzzyName) {
+    this.robot.logger.warning(
+      "@userForRawFuzzyName() is going to be deprecated in 3.0.0 use @robot.brain.userForRawFuzzyName()"
+    )
     return this.robot.brain.usersForRawFuzzyName(fuzzyName)
   }
 
@@ -112,8 +118,10 @@ class Adapter extends EventEmitter {
   // fuzzyName is a raw fuzzy match (see usersForRawFuzzyName).
   //
   // Returns an Array of User instances matching the fuzzy name.
-  usersForFuzzyName (fuzzyName) {
-    this.robot.logger.warning('@userForFuzzyName() is going to be deprecated in 3.0.0 use @robot.brain.userForFuzzyName()')
+  usersForFuzzyName(fuzzyName) {
+    this.robot.logger.warning(
+      "@userForFuzzyName() is going to be deprecated in 3.0.0 use @robot.brain.userForFuzzyName()"
+    )
     return this.robot.brain.usersForFuzzyName(fuzzyName)
   }
 
@@ -123,8 +131,10 @@ class Adapter extends EventEmitter {
   // send the request.
   //
   // Returns a ScopedClient instance.
-  http (url) {
-    this.robot.logger.warning('@http() is going to be deprecated in 3.0.0 use @robot.http()')
+  http(url) {
+    this.robot.logger.warning(
+      "@http() is going to be deprecated in 3.0.0 use @robot.http()"
+    )
     return this.robot.http(url)
   }
 }

@@ -1,9 +1,7 @@
-'use strict'
-
-const async = require('async')
+const async = require("async")
 
 class Middleware {
-  constructor (robot) {
+  constructor(robot) {
     this.robot = robot
     this.stack = []
   }
@@ -24,7 +22,7 @@ class Middleware {
   //
   // Returns nothing
   // Returns before executing any middleware
-  execute (context, next, done) {
+  execute(context, next, done) {
     const self = this
 
     if (done == null) {
@@ -34,9 +32,9 @@ class Middleware {
     // Execute a single piece of middleware and update the completion callback
     // (each piece of middleware can wrap the 'done' callback with additional
     // logic).
-    function executeSingleMiddleware (doneFunc, middlewareFunc, cb) {
+    function executeSingleMiddleware(doneFunc, middlewareFunc, cb) {
       // Match the async.reduce interface
-      function nextFunc (newDoneFunc) {
+      function nextFunc(newDoneFunc) {
         cb(null, newDoneFunc || doneFunc)
       }
 
@@ -45,20 +43,28 @@ class Middleware {
         middlewareFunc(context, nextFunc, doneFunc)
       } catch (err) {
         // Maintaining the existing error interface (Response object)
-        self.robot.emit('error', err, context.response)
+        self.robot.emit("error", err, context.response)
         // Forcibly fail the middleware and stop executing deeper
         doneFunc()
       }
     }
 
     // Executed when the middleware stack is finished
-    function allDone (_, finalDoneFunc) {
+    function allDone(_, finalDoneFunc) {
       next(context, finalDoneFunc)
     }
 
     // Execute each piece of middleware, collecting the latest 'done' callback
     // at each step.
-    process.nextTick(async.reduce.bind(null, this.stack, done, executeSingleMiddleware, allDone))
+    process.nextTick(
+      async.reduce.bind(
+        null,
+        this.stack,
+        done,
+        executeSingleMiddleware,
+        allDone
+      )
+    )
   }
 
   // Public: Registers new middleware
@@ -75,9 +81,11 @@ class Middleware {
   //              executed.
   //
   // Returns nothing.
-  register (middleware) {
+  register(middleware) {
     if (middleware.length !== 3) {
-      throw new Error(`Incorrect number of arguments for middleware callback (expected 3, got ${middleware.length})`)
+      throw new Error(
+        `Incorrect number of arguments for middleware callback (expected 3, got ${middleware.length})`
+      )
     }
     this.stack.push(middleware)
   }
