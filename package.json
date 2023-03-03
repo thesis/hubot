@@ -50,7 +50,7 @@
   },
   "typings": "dist/hubot.d.ts",
   "scripts": {
-    "build": "dts build --name Hubot --entry src/hubot.ts --format esm",
+    "build": "dts build --name hubot --entry bin/hubot.ts --format esm",
     "start": "bin/hubot",
     "pretest": "standard",
     "test": "nyc --reporter=html --reporter=text mocha",

@@ -1,20 +1,23 @@
 "use strict";
 
-const EventEmitter = require("events").EventEmitter;
-const fs = require("fs");
-const path = require("path");
+import Adapter from "./adapter";
 
-const async = require("async");
-const Log = require("log");
-const HttpClient = require("scoped-http-client");
+import { EventEmitter } from "events"
+import fs from "fs";
+import path from "path";
 
-const Brain = require("./brain");
-const Response = require("./response");
-const Listener = require("./listener");
-const Message = require("./message");
-const Middleware = require("./middleware");
+import async from "async";
+import Log from "log";
+import HttpClient from "scoped-http-client";
 
-const HUBOT_DEFAULT_ADAPTERS = ["campfire", "shell"];
+import Brain from "./brain";
+import Response from "./response";
+import Listener from "./listener";
+import Message from "./message";
+import Middleware from "./middleware";
+import {DataStore} from "./datastore";
+
+const HUBOT_DEFAULT_ADAPTERS = ["shell"];
 const HUBOT_DOCUMENTATION_SECTIONS = [
   "description",
   "dependencies",
@@ -28,7 +31,50 @@ const HUBOT_DOCUMENTATION_SECTIONS = [
   "urls",
 ];
 
+type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
+
+type FunctionKeys<T> = KeysMatching<T, (...args: any[]) => any>
+
+type FunctionReturnOnly<T> = { [Prop in FunctionKeys<T>]: T[Prop] }
+
+function wrap<WrapperBaseType,  FunctionNameType extends keyof WrapperBaseType, FunctionReturnType extends WrapperBaseType[FunctionNameType]>(
+  base: WrapperBaseType,
+  fn: FunctionNameType
+): FunctionReturnType {
+  const baseFunction = base[fn]
+
+  return (...args: Parameters<RealFunctionType>): ReturnType<WrapperBaseType[FunctionNameType]> => baseFunction.apply(base, args)
+}
+
+type Booyan = KeysMatching<EventEmitter, (...args: any[])=>any>
+type Yam = EventEmitter[Booyan]
+
+wrap(new EventEmitter(), "addListener")
+
 class Robot {
+  public version = "0"
+
+  public events = new EventEmitter()
+  public brain = new Brain(this)
+
+  public adapter: Adapter | undefined
+  public datastore: DataStore | undefined
+
+  public Response = Response
+
+  public commands = []
+  public listeners = []
+  public middleware = {
+    listener: new Middleware(this),
+    response: new Middleware(this),
+    receive: new Middleware(this),
+  }
+
+  public logger = new Log(process.env.HUBOT_LOG_LEVEL ?? "info")
+  public pingIntervalId: NodeJS.Timer | null
+  public globalHttpOptions: Partial<HttpClient.Options> = {}
+  public errorHandlers: ((error: Error, res?: Response)=>void)[] = []
+
   // Robots receive messages from a chat source (Campfire, irc, etc), and
   // dispatch them to matching listeners.
   //
@@ -37,32 +83,8 @@ class Robot {
   // httpd       - A Boolean whether to enable the HTTP daemon.
   // name        - A String of the robot name, defaults to Hubot.
   // alias       - A String of the alias of the robot name
-  constructor(adapterPath, adapter, httpd, name, alias) {
-    if (name == null) {
-      name = "Hubot";
-    }
-    if (alias == null) {
-      alias = false;
-    }
+  constructor(public adapterPath: string | undefined, public adapterName: string, public httpd: boolean, public name: string = "Hubot", public alias: string | undefined = undefined) {
     this.adapterPath = path.join(__dirname, "adapters");
-
-    this.name = name;
-    this.events = new EventEmitter();
-    this.brain = new Brain(this);
-    this.alias = alias;
-    this.adapter = null;
-    this.datastore = null;
-    this.Response = Response;
-    this.commands = [];
-    this.listeners = [];
-    this.middleware = {
-      listener: new Middleware(this),
-      response: new Middleware(this),
-      receive: new Middleware(this),
-    };
-    this.logger = new Log(process.env.HUBOT_LOG_LEVEL || "info");
-    this.pingIntervalId = null;
-    this.globalHttpOptions = {};
 
     this.parseVersion();
     if (httpd) {
@@ -71,10 +93,7 @@ class Robot {
       this.setupNullRouter();
     }
 
-    this.loadAdapter(adapter);
-
-    this.adapterName = adapter;
-    this.errorHandlers = [];
+    this.loadAdapter(adapterName);
 
     this.on("error", (err, res) => {
       return this.invokeErrorHandlers(err, res);
@@ -83,6 +102,10 @@ class Robot {
       return this.emit("error", err);
     };
     process.on("uncaughtException", this.onUncaughtException);
+  }
+
+  urlForMessage(message: Message): string {
+    return this.adapter.urlForMessage(message)
   }
 
   // Public: Adds a custom Listener with the provided matcher, options, and
@@ -252,7 +275,7 @@ class Robot {
   // res - An optional Response object that generated the error
   //
   // Returns nothing.
-  invokeErrorHandlers(error, res) {
+  invokeErrorHandlers(error: Error, res?: Response) {
     this.logger.error(error.stack);
 
     this.errorHandlers.map((errorHandler) => {
@@ -725,6 +748,7 @@ class Robot {
     this.adapter.send.apply(this.adapter, [envelope].concat(strings));
   }
 
+  public on = wrap(this.events, "on")
   // Public: A wrapper around the EventEmitter API to make usage
   // semantically better.
   //
@@ -733,11 +757,11 @@ class Robot {
   //            when event happens.
   //
   // Returns nothing.
-  on(event /* , ...args */) {
+  /*on(event: typeof this.events) {
     const args = [].slice.call(arguments, 1);
 
     this.events.on.apply(this.events, [event].concat(args));
-  }
+  }*/
 
   // Public: A wrapper around the EventEmitter API to make usage
   // semantically better.
@@ -747,7 +771,7 @@ class Robot {
   //            when event happens.
   //
   // Returns nothing.
-  once(event /* , ...args */) {
+  once(event, listener: (event: string)=>void /* , ...args */) {
     const args = [].slice.call(arguments, 1);
 
     this.events.once.apply(this.events, [event].concat(args));
@@ -843,7 +867,7 @@ class Robot {
   }
 }
 
-module.exports = Robot;
+export default Robot;
 
 function isCatchAllMessage(message) {
   return message instanceof Message.CatchAllMessage;
