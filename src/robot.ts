@@ -233,14 +233,15 @@ class Robot {
   //
   // Returns nothing.
   invokeErrorHandlers(error: Error, res?: Response) {
-    this.logger.error(error.stack)
+    this.logger.error(error.stack ?? "error with no stack")
 
-    this.errorHandlers.map((errorHandler) => {
+    this.errorHandlers.forEach((errorHandler) => {
       try {
         errorHandler(error, res)
       } catch (errorHandlerError) {
         this.logger.error(
-          `while invoking error handler: ${errorHandlerError}\n${errorHandlerError.stack}`
+          `while invoking error handler: ${errorHandlerError}\n${
+            errorHandlerError instanceof Error ? errorHandlerError.stack : ""
         )
       }
     })
@@ -421,7 +422,9 @@ class Robot {
         )
       }
     } catch (error) {
-      this.logger.error(`Unable to load ${full}: ${error.stack}`)
+      this.logger.error(
+        `Unable to load ${full}: ${error instanceof Error ? error.stack : ""}`
+      )
       process.exit(1)
     }
   }

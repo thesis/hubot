@@ -8,7 +8,8 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strict": true,
-		"allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "NodeNext",
     "target": "esnext"
   },
   "typeAcquisition": {
