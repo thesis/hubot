@@ -1,4 +1,4 @@
-const { EventEmitter } = require("events")
+const {EventEmitter} = require("events")
 
 class Adapter extends EventEmitter {
   // An adapter is a specific interface to a chat source for robots.
@@ -8,6 +8,16 @@ class Adapter extends EventEmitter {
     super()
     this.robot = robot
   }
+
+  // Public: Raw method for building a reply and sending it back to the chat
+  // source. Extend this.
+  //
+  // envelope - A Object with message, room and user details.
+  // strings  - One or more Strings for each reply to send.
+  //
+  // Returns nothing.
+  // registerCommand<Parameters extends CommandParameterInfo[]>(name: string, parameters: Parameters, callback: (...args: CommandValues<Parameters>) => void) {
+  registerCommand(name, parameters, callback) {}
 
   // Public: Raw method for sending data back to the chat source. Extend this.
   //

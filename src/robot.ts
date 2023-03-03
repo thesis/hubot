@@ -28,6 +28,31 @@ const HUBOT_DOCUMENTATION_SECTIONS = [
   "urls",
 ]
 
+/**
+ * Information on a first-class command's parameters. These are commands that
+ * may have first-class support in an adapter, such as slash commands in
+ * Discord.
+ */
+type CommandParameterInfo = {
+  name: string
+  description?: string
+}
+/**
+ * Extracts the names from a (const) list of CommandParameterInfo.
+ */
+type CommandNames<T extends readonly CommandParameterInfo[]> = {
+  [P in keyof T]: P extends keyof [] ? T[P] : T[P]["name"]
+}
+/**
+ * Extracts the value types from a (const) list of CommandParameterInfo. If no
+ * per-command type specialization exists, returns a const list of strings of
+ * the same length as the passed const list of parameters. Useful for enforcing
+ * e.g. that listeners take the right number of parameters.
+ */
+type CommandValues<T extends readonly CommandParameterInfo[]> = {
+  [P in keyof T]: P extends keyof [] ? T[P] : string
+}
+
 class Robot {
   public version = "0"
 
@@ -139,6 +164,48 @@ class Robot {
     this.hear(this.respondPattern(regex), options, callback)
   }
 
+  /**
+   * Tracks commands that were added before an adapter was loaded. Once the
+   * adapter is loaded, the commands are re-registered to properly notify the
+   * adapter.
+   */
+  #unregisteredCommands: {
+    name: string
+    parameters: CommandParameterInfo[]
+    // The callbacks here have a type dependent on `parameters`, reflected in
+    // the `command` call, but that cannot be expressed here.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: (...args: any[]) => void
+  }[] = []
+
+  /**
+   * Add a command native to the adapter with a given name and the provided
+   * command parameter info, which includes a name and description for the
+   * parameter.
+   *
+   * This allows hooking into first-class command support on platforms like
+   * Discord, while allowing Hubot to fall back to a standard `respond` when
+   * needed.
+   */
+  command<Parameters extends CommandParameterInfo[]>(
+    name: string,
+    parameters: Parameters,
+    callback: (...args: CommandValues<Parameters>) => void
+  ) {
+    if (this.adapter && "registerCommand" in this.adapter) {
+      this.adapter.registerCommand(name, parameters, callback)
+    } else if (this.adapter) {
+      this.respond(name, {}, callback)
+    } else {
+      // Handle once the adapter is available, in loadAdapter.
+      this.#unregisteredCommands.push({
+        name,
+        parameters,
+        callback: callback as (...args: any[]) => void,
+      })
+    }
+  }
+
   // Public: Build a regular expression that matches messages addressed
   // directly to the robot
   //
@@ -242,6 +309,7 @@ class Robot {
         this.logger.error(
           `while invoking error handler: ${errorHandlerError}\n${
             errorHandlerError instanceof Error ? errorHandlerError.stack : ""
+          }`
         )
       }
     })
@@ -591,6 +659,9 @@ class Robot {
     }
 
     if (this.adapter !== null && this.adapter !== undefined) {
+      this.unregisteredCommands.forEach(({ name, parameters, callback }) =>
+        this.command(name, parameters, callback)
+      )
       this.adapter.on("connected", (...args) => this.emit("connected", ...args))
       this.emit("adapter-initialized", adapter)
     }
