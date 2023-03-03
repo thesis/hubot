@@ -53,7 +53,7 @@ class Robot {
 
   public logger = new Log(process.env.HUBOT_LOG_LEVEL ?? "info")
 
-  public pingIntervalId: NodeJS.Timer | null
+  public pingIntervalId: NodeJS.Timer | undefined
 
   public globalHttpOptions: Partial<HttpClient.Options> = {}
 
@@ -744,7 +744,7 @@ class Robot {
   //
   // Returns nothing.
   shutdown() {
-    if (this.pingIntervalId != null) {
+    if (this.pingIntervalId !== undefined) {
       clearInterval(this.pingIntervalId)
     }
     process.removeListener("uncaughtException", this.onUncaughtException)
