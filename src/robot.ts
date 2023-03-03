@@ -41,7 +41,7 @@ class Robot {
 
   public Response = Response
 
-  public commands = []
+  public commands: string[] = []
 
   public listeners = []
 
@@ -566,18 +566,18 @@ class Robot {
   // adapter - A String of the adapter name to use.
   //
   // Returns nothing.
-  async loadAdapter(adapter) {
+  async loadAdapter(adapter: string) {
     this.logger.debug(`Loading adapter ${adapter}`)
 
     // Give adapter loading event handlers a chance to attach.
     await Promise.resolve()
 
-    try {
-      const path =
-        Array.from(HUBOT_DEFAULT_ADAPTERS).indexOf(adapter) !== -1
-          ? `${this.adapterPath}/${adapter}`
-          : `hubot-${adapter}`
+    const path =
+      Array.from(HUBOT_DEFAULT_ADAPTERS).indexOf(adapter) !== -1
+        ? `${this.adapterPath}/${adapter}`
+        : `hubot-${adapter}`
 
+    try {
       this.adapter = require(path).use(this)
     } catch (err) {
       try {
@@ -608,8 +608,8 @@ class Robot {
   // path - A String path to the file on disk.
   //
   // Returns nothing.
-  parseHelp(path) {
-    const scriptDocumentation = {}
+  parseHelp(path: string) {
+    const scriptDocumentation: { [section: string]: string[] } = {}
     const body = fs.readFileSync(require.resolve(path), "utf-8")
 
     const useStrictHeaderRegex = /^["']use strict['"];?\s+/
@@ -670,10 +670,8 @@ class Robot {
   // strings  - One or more Strings for each message to send.
   //
   // Returns nothing.
-  send(envelope /* , ...strings */) {
-    const strings = [].slice.call(arguments, 1)
-
-    this.adapter.send.apply(this.adapter, [envelope].concat(strings))
+  send(envelope: any, ...strings: string[]) {
+    this.adapter!.send.apply(this.adapter, [envelope].concat(strings))
   }
 
   // Public: A helper reply function which delegates to the adapter's reply
@@ -683,10 +681,8 @@ class Robot {
   // strings  - One or more Strings for each message to send.
   //
   // Returns nothing.
-  reply(envelope /* , ...strings */) {
-    const strings = [].slice.call(arguments, 1)
-
-    this.adapter.reply.apply(this.adapter, [envelope].concat(strings))
+  reply(envelope: any, ...strings: string[]) {
+    this.adapter!.reply.apply(this.adapter, [envelope].concat(strings))
   }
 
   // Public: A helper send function to message a room that the robot is in.
@@ -695,11 +691,10 @@ class Robot {
   // strings - One or more Strings for each message to send.
   //
   // Returns nothing.
-  messageRoom(room /* , ...strings */) {
-    const strings = [].slice.call(arguments, 1)
+  messageRoom(room: string, ...strings: string[]) {
     const envelope = { room }
 
-    this.adapter.send.apply(this.adapter, [envelope].concat(strings))
+    this.adapter!.send.apply(this.adapter, [envelope].concat(strings))
   }
 
   // Public: A wrapper around the EventEmitter API to make usage
@@ -737,7 +732,7 @@ class Robot {
   run() {
     this.emit("running")
 
-    this.adapter.run()
+    this.adapter!.run()
   }
 
   // Public: Gracefully shutdown the robot process
@@ -748,7 +743,7 @@ class Robot {
       clearInterval(this.pingIntervalId)
     }
     process.removeListener("uncaughtException", this.onUncaughtException)
-    this.adapter.close()
+    this.adapter!.close()
     if (this.server) {
       this.server.close()
     }
