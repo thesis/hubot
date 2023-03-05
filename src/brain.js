@@ -1,6 +1,6 @@
-const { EventEmitter } = require("events")
+import Emittery from "emittery"
 
-const User = require("./user")
+import User from "./user"
 
 // If necessary, reconstructs a User object. Returns either:
 //
@@ -31,7 +31,7 @@ const reconstructUserIfNecessary = function (user, robot) {
   return user
 }
 
-class Brain extends EventEmitter {
+class Brain extends Emittery {
   // Represents somewhat persistent storage for the robot. Extend this.
   //
   // Returns a new Brain with no external storage.
@@ -240,4 +240,4 @@ class Brain extends EventEmitter {
   }
 }
 
-module.exports = Brain
+export default Brain

@@ -1,9 +1,9 @@
 const HTTPS = require("https")
-const { EventEmitter } = require("events")
+const Emittery = require("emittery")
 
 const Adapter = require("../adapter")
 
-const Message = require("../message")
+const Message = require("../message").default
 
 const { TextMessage } = Message
 const { EnterMessage } = Message
@@ -189,7 +189,7 @@ class Campfire extends Adapter {
 
 exports.use = (robot) => new Campfire(robot)
 
-class CampfireStreaming extends EventEmitter {
+class CampfireStreaming extends Emittery {
   constructor(options, robot) {
     super()
 

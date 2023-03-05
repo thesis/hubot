@@ -1,9 +1,9 @@
-import User from "./src/user"
-import Brain from "./src/brain"
-import Robot from "./src/robot"
-import Adapter from "./src/adapter"
-import Response from "./src/response"
-import { Listener } from "./src/listener"
+import User from "./user"
+import Brain from "./brain"
+import Robot from "./robot"
+import Adapter from "./adapter"
+import Response from "./response"
+import { Listener } from "./listener"
 import {
   Message,
   TextMessage,
@@ -11,8 +11,8 @@ import {
   LeaveMessage,
   TopicMessage,
   CatchAllMessage,
-} from "./src/message"
-import { DataStore, DataStoreUnavailable } from "./src/datastore"
+} from "./message"
+import { DataStore, DataStoreUnavailable } from "./datastore"
 
 function loadBot(
   adapterPath: string | undefined,
@@ -24,15 +24,13 @@ function loadBot(
   return new Robot(adapterPath, adapterName, enableHttpd, botName, botAlias)
 }
 
-export default {
+export {
   User,
   Brain,
   Robot,
   Adapter,
   Response,
-
   Listener,
-
   Message,
   TextMessage,
   EnterMessage,
@@ -41,6 +39,5 @@ export default {
   CatchAllMessage,
   DataStore,
   DataStoreUnavailable,
-
   loadBot,
 }

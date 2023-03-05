@@ -2,15 +2,15 @@
   "compilerOptions": {
     "alwaysStrict": true,
     "allowJs": true,
-    "lib": ["es2017"],
+    "lib": ["ESNext"],
     "noEmit": true,
-    "moduleResolution": "node",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "noImplicitThis": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "module": "NodeNext",
-    "target": "esnext"
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node"
   },
   "typeAcquisition": {
     "enable": true

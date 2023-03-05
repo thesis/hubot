@@ -1,4 +1,6 @@
-const async = require("async")
+import async from "async"
+
+const { reduce } = async
 
 class Middleware {
   constructor(robot) {
@@ -57,13 +59,7 @@ class Middleware {
     // Execute each piece of middleware, collecting the latest 'done' callback
     // at each step.
     process.nextTick(
-      async.reduce.bind(
-        null,
-        this.stack,
-        done,
-        executeSingleMiddleware,
-        allDone
-      )
+      reduce.bind(null, this.stack, done, executeSingleMiddleware, allDone)
     )
   }
 
@@ -91,4 +87,4 @@ class Middleware {
   }
 }
 
-module.exports = Middleware
+export default Middleware

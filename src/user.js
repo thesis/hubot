@@ -1,4 +1,4 @@
-const { DataStoreUnavailable } = require("./datastore")
+import { DataStoreUnavailable } from "./datastore"
 
 class User {
   // Represents a participating user in the chat.
@@ -62,4 +62,4 @@ class User {
   }
 }
 
-module.exports = User
+export default User

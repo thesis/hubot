@@ -1,5 +1,5 @@
 declare module "optparse" {
-  declare class OptionParser {
+  class OptionParser {
     constructor(switches: readonly (readonly [string, string, string])[])
 
     banner: string
@@ -9,4 +9,6 @@ declare module "optparse" {
 
     parse(argv: string[]): void
   }
+
+  export { OptionParser }
 }

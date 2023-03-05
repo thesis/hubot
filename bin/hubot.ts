@@ -1,9 +1,11 @@
-import fs from "fs"
+import * as fs from "fs"
 import { resolve as pathResolve } from "path"
 
-import OptParse from "optparse"
+import optparse from "optparse"
 
-import Hubot from ".."
+import { loadBot } from "../src"
+
+const { OptionParser } = optparse
 
 const switches = [
   ["-a", "--adapter ADAPTER", "The Adapter to use"],
@@ -36,7 +38,7 @@ const options = {
   version: undefined as boolean | undefined,
 }
 
-const Parser = new OptParse.OptionParser(switches)
+const Parser = new OptionParser(switches)
 Parser.banner = "Usage hubot [options]"
 
 Parser.on("adapter", (opt, value) => {
@@ -104,7 +106,7 @@ if (options.create) {
   process.exit(1)
 }
 
-const robot = Hubot.loadBot(
+const robot = loadBot(
   undefined,
   options.adapter,
   options.enableHttpd,
@@ -126,6 +128,32 @@ if (options.configCheck) {
 robot.once("adapter-initialized", () => robot.run())
 robot.once("connected", loadScripts)
 
+function loadExternalScripts() {
+  const externalScripts = pathResolve(".", "external-scripts.json")
+
+  if (!fs.existsSync(externalScripts)) {
+    return
+  }
+
+  fs.readFile(
+    externalScripts,
+    { encoding: "utf8" },
+    async (error, data: string) => {
+      if (error) {
+        throw error
+      }
+
+      try {
+        await robot.loadExternalScripts(JSON.parse(data))
+      } catch (loadingError) {
+        console.error(
+          `Error parsing JSON data from external-scripts.json: ${loadingError}`
+        )
+        process.exit(1)
+      }
+    }
+  )
+}
 function loadScripts() {
   robot.load(pathResolve(".", "scripts"))
   robot.load(pathResolve(".", "src", "scripts"))
@@ -138,28 +166,5 @@ function loadScripts() {
     }
 
     robot.load(pathResolve(".", scriptPath))
-  })
-}
-
-function loadExternalScripts() {
-  const externalScripts = pathResolve(".", "external-scripts.json")
-
-  if (!fs.existsSync(externalScripts)) {
-    return
-  }
-
-  fs.readFile(externalScripts, { encoding: "utf8" }, (error, data: string) => {
-    if (error) {
-      throw error
-    }
-
-    try {
-      robot.loadExternalScripts(JSON.parse(data))
-    } catch (error) {
-      console.error(
-        `Error parsing JSON data from external-scripts.json: ${error}`
-      )
-      process.exit(1)
-    }
   })
 }

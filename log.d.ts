@@ -1,14 +1,7 @@
 declare module "log" {
   import { format } from "util"
 
-  type DropFirst<T extends unknown[]> = T extends [unknown, ...infer U]
-    ? U
-    : never
-
-  type LogFunction = (
-    msg: string,
-    ...rest: DropFirst<Parameters<typeof format>>
-  ) => void
+  type LogFunction = (msg: string, ...rest: Parameters<typeof format>) => void
 
   class Log {
     constructor(level: string, stream?: NodeJS.WriteStream)

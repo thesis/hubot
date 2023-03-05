@@ -76,7 +76,7 @@ class CatchAllMessage extends Message {
   }
 }
 
-module.exports = {
+export {
   Message,
   TextMessage,
   EnterMessage,

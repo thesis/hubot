@@ -89,7 +89,4 @@ class DataStore {
 
 class DataStoreUnavailable extends Error {}
 
-module.exports = {
-  DataStore,
-  DataStoreUnavailable,
-}
+export { DataStore, DataStoreUnavailable }

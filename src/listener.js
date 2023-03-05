@@ -1,7 +1,7 @@
-const { inspect } = require("util")
+import { inspect } from "util"
 
-const { TextMessage } = require("./message")
-const Middleware = require("./middleware")
+import { TextMessage } from "./message"
+import Middleware from "./middleware"
 
 class Listener {
   // Listeners receive every message from the chat source and decide if they
@@ -131,7 +131,4 @@ class TextListener extends Listener {
   }
 }
 
-module.exports = {
-  Listener,
-  TextListener,
-}
+export { Listener, TextListener }
