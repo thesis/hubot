@@ -1,10 +1,8 @@
-'use strict'
-
 class Message {
   // Represents an incoming message from the chat.
   //
   // user - A User instance that sent the message.
-  constructor (user, done) {
+  constructor(user, done) {
     this.user = user
     this.done = done || false
     this.room = this.user.room
@@ -13,7 +11,7 @@ class Message {
   // Indicates that no other Listener should be called on this object
   //
   // Returns nothing.
-  finish () {
+  finish() {
     this.done = true
   }
 }
@@ -24,7 +22,7 @@ class TextMessage extends Message {
   // user - A User instance that sent the message.
   // text - A String message.
   // id   - A String of the message ID.
-  constructor (user, text, id) {
+  constructor(user, text, id) {
     super(user)
     this.text = text
     this.id = id
@@ -35,14 +33,14 @@ class TextMessage extends Message {
   // regex - A Regex to check.
   //
   // Returns a Match object or null.
-  match (regex) {
+  match(regex) {
     return this.text.match(regex)
   }
 
   // String representation of a TextMessage
   //
   // Returns the message text
-  toString () {
+  toString() {
     return this.text
   }
 }
@@ -72,17 +70,17 @@ class CatchAllMessage extends Message {
   // Represents a message that no matchers matched.
   //
   // message - The original message.
-  constructor (message) {
+  constructor(message) {
     super(message.user)
     this.message = message
   }
 }
 
-module.exports = {
+export {
   Message,
   TextMessage,
   EnterMessage,
   LeaveMessage,
   TopicMessage,
-  CatchAllMessage
+  CatchAllMessage,
 }

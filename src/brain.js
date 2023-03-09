@@ -1,8 +1,6 @@
-'use strict'
+import Emittery from "emittery"
 
-const EventEmitter = require('events').EventEmitter
-
-const User = require('./user')
+import User from "./user"
 
 // If necessary, reconstructs a User object. Returns either:
 //
@@ -10,36 +8,38 @@ const User = require('./user')
 // 2. If the original object was a User object, the original object
 // 3. If the original object was a plain JavaScript object, return
 //    a User object with all of the original object's properties.
-let reconstructUserIfNecessary = function (user, robot) {
+const reconstructUserIfNecessary = function (user, robot) {
   if (!user) {
     return null
   }
 
-  if (!user.constructor || (user.constructor && user.constructor.name !== 'User')) {
-    let id = user.id
+  if (
+    !user.constructor ||
+    (user.constructor && user.constructor.name !== "User")
+  ) {
+    const { id } = user
     delete user.id
     // Use the old user as the "options" object,
     // populating the new user with its values.
     // Also add the `robot` field so it gets a reference.
     user.robot = robot
-    let newUser = new User(id, user)
+    const newUser = new User(id, user)
     delete user.robot
 
     return newUser
-  } else {
-    return user
   }
+  return user
 }
 
-class Brain extends EventEmitter {
+class Brain extends Emittery {
   // Represents somewhat persistent storage for the robot. Extend this.
   //
   // Returns a new Brain with no external storage.
-  constructor (robot) {
+  constructor(robot) {
     super()
     this.data = {
       users: {},
-      _private: {}
+      _private: {},
     }
     this.getRobot = function () {
       return robot
@@ -47,7 +47,7 @@ class Brain extends EventEmitter {
 
     this.autoSave = true
 
-    robot.on('running', () => {
+    robot.on("running", () => {
       this.resetSaveInterval(5)
     })
   }
@@ -56,7 +56,7 @@ class Brain extends EventEmitter {
   // existing @data before emitting the 'loaded' event.
   //
   // Returns the instance for chaining.
-  set (key, value) {
+  set(key, value) {
     let pair
     if (key === Object(key)) {
       pair = key
@@ -69,7 +69,7 @@ class Brain extends EventEmitter {
       this.data._private[key] = pair[key]
     })
 
-    this.emit('loaded', this.data)
+    this.emit("loaded", this.data)
 
     return this
   }
@@ -78,7 +78,7 @@ class Brain extends EventEmitter {
   // or return null if not found.
   //
   // Returns the value.
-  get (key) {
+  get(key) {
     return this.data._private[key] != null ? this.data._private[key] : null
   }
 
@@ -86,7 +86,7 @@ class Brain extends EventEmitter {
   // if it exists
   //
   // Returns the instance for chaining.
-  remove (key) {
+  remove(key) {
     if (this.data._private[key] != null) {
       delete this.data._private[key]
     }
@@ -98,17 +98,17 @@ class Brain extends EventEmitter {
   // persisting.
   //
   // Returns nothing.
-  save () {
-    this.emit('save', this.data)
+  save() {
+    this.emit("save", this.data)
   }
 
   // Public: Emits the 'close' event so that 'brain' scripts can handle closing.
   //
   // Returns nothing.
-  close () {
+  close() {
     clearInterval(this.saveInterval)
     this.save()
-    this.emit('close')
+    this.emit("close")
   }
 
   // Public: Enable or disable the automatic saving
@@ -116,7 +116,7 @@ class Brain extends EventEmitter {
   // enabled - A boolean whether to autosave or not
   //
   // Returns nothing
-  setAutoSave (enabled) {
+  setAutoSave(enabled) {
     this.autoSave = enabled
   }
 
@@ -125,7 +125,7 @@ class Brain extends EventEmitter {
   // seconds - An Integer of seconds between saves.
   //
   // Returns nothing.
-  resetSaveInterval (seconds) {
+  resetSaveInterval(seconds) {
     if (this.saveInterval) {
       clearInterval(this.saveInterval)
     }
@@ -141,33 +141,33 @@ class Brain extends EventEmitter {
   // Returns nothing.
   //
   // Caveats: Deeply nested structures don't merge well.
-  mergeData (data) {
-    for (let k in data || {}) {
+  mergeData(data) {
+    for (const k in data || {}) {
       this.data[k] = data[k]
     }
 
     // Ensure users in the brain are still User objects.
     if (data && data.users) {
-      for (let k in data.users) {
-        let user = this.data.users[k]
+      for (const k in data.users) {
+        const user = this.data.users[k]
         this.data.users[k] = reconstructUserIfNecessary(user, this.getRobot())
       }
     }
 
-    this.emit('loaded', this.data)
+    this.emit("loaded", this.data)
   }
 
   // Public: Get an Array of User objects stored in the brain.
   //
   // Returns an Array of User objects.
-  users () {
+  users() {
     return this.data.users
   }
 
   // Public: Get a User object given a unique identifier.
   //
   // Returns a User instance of the specified user.
-  userForId (id, options) {
+  userForId(id, options) {
     let user = this.data.users[id]
     if (!options) {
       options = {}
@@ -191,12 +191,12 @@ class Brain extends EventEmitter {
   // Public: Get a User object given a name.
   //
   // Returns a User instance for the user with the specified name.
-  userForName (name) {
+  userForName(name) {
     let result = null
     const lowerName = name.toLowerCase()
 
-    for (let k in this.data.users || {}) {
-      const userName = this.data.users[k]['name']
+    for (const k in this.data.users || {}) {
+      const userName = this.data.users[k].name
       if (userName != null && userName.toString().toLowerCase() === lowerName) {
         result = this.data.users[k]
       }
@@ -210,7 +210,7 @@ class Brain extends EventEmitter {
   // nicknames, etc.
   //
   // Returns an Array of User instances matching the fuzzy name.
-  usersForRawFuzzyName (fuzzyName) {
+  usersForRawFuzzyName(fuzzyName) {
     const lowerFuzzyName = fuzzyName.toLowerCase()
 
     const users = this.data.users || {}
@@ -229,13 +229,15 @@ class Brain extends EventEmitter {
   // fuzzyName is a raw fuzzy match (see usersForRawFuzzyName).
   //
   // Returns an Array of User instances matching the fuzzy name.
-  usersForFuzzyName (fuzzyName) {
+  usersForFuzzyName(fuzzyName) {
     const matchedUsers = this.usersForRawFuzzyName(fuzzyName)
     const lowerFuzzyName = fuzzyName.toLowerCase()
-    const fuzzyMatchedUsers = matchedUsers.filter(user => user.name.toLowerCase() === lowerFuzzyName)
+    const fuzzyMatchedUsers = matchedUsers.filter(
+      (user) => user.name.toLowerCase() === lowerFuzzyName
+    )
 
     return fuzzyMatchedUsers.length > 0 ? fuzzyMatchedUsers : matchedUsers
   }
 }
 
-module.exports = Brain
+export default Brain

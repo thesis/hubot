@@ -1,40 +1,43 @@
-'use strict'
+const fs = require("fs")
+const readline = require("readline")
+const Stream = require("stream")
+const cline = require("cline")
+const chalk = require("chalk")
 
-const fs = require('fs')
-const readline = require('readline')
-const Stream = require('stream')
-const cline = require('cline')
-const chalk = require('chalk')
+const Adapter = require("../adapter")
 
-const Adapter = require('../adapter')
+const _require = require("../message")
 
-var _require = require('../message')
+const { TextMessage } = _require
 
-const TextMessage = _require.TextMessage
+const historySize =
+  process.env.HUBOT_SHELL_HISTSIZE != null
+    ? parseInt(process.env.HUBOT_SHELL_HISTSIZE)
+    : 1024
 
-const historySize = process.env.HUBOT_SHELL_HISTSIZE != null ? parseInt(process.env.HUBOT_SHELL_HISTSIZE) : 1024
-
-const historyPath = '.hubot_history'
+const historyPath = ".hubot_history"
 
 class Shell extends Adapter {
-  send (envelope/* , ...strings */) {
+  send(envelope /* , ...strings */) {
     const strings = [].slice.call(arguments, 1)
 
-    Array.from(strings).forEach(str => console.log(chalk.bold(`${str}`)))
+    Array.from(strings).forEach((str) => console.log(chalk.bold(`${str}`)))
   }
 
-  emote (envelope/* , ...strings */) {
+  emote(envelope /* , ...strings */) {
     const strings = [].slice.call(arguments, 1)
-    Array.from(strings).map(str => this.send(envelope, `* ${str}`))
+    Array.from(strings).map((str) => this.send(envelope, `* ${str}`))
   }
 
-  reply (envelope/* , ...strings */) {
-    const strings = [].slice.call(arguments, 1).map((s) => `${envelope.user.name}: ${s}`)
+  reply(envelope /* , ...strings */) {
+    const strings = [].slice
+      .call(arguments, 1)
+      .map((s) => `${envelope.user.name}: ${s}`)
 
     this.send.apply(this, [envelope].concat(strings))
   }
 
-  run () {
+  run() {
     this.buildCli()
 
     loadHistory((error, history) => {
@@ -44,45 +47,54 @@ class Shell extends Adapter {
 
       this.cli.history(history)
       this.cli.interact(`${this.robot.name}> `)
-      return this.emit('connected')
+      return this.emit("connected")
     })
   }
 
-  shutdown () {
+  shutdown() {
     this.robot.shutdown()
     return process.exit(0)
   }
 
-  buildCli () {
+  buildCli() {
     this.cli = cline()
 
-    this.cli.command('*', input => {
-      let userId = process.env.HUBOT_SHELL_USER_ID || '1'
+    this.cli.command("*", (input) => {
+      let userId = process.env.HUBOT_SHELL_USER_ID || "1"
       if (userId.match(/A\d+z/)) {
         userId = parseInt(userId)
       }
 
-      const userName = process.env.HUBOT_SHELL_USER_NAME || 'Shell'
-      const user = this.robot.brain.userForId(userId, { name: userName, room: 'Shell' })
-      this.receive(new TextMessage(user, input, 'messageId'))
+      const userName = process.env.HUBOT_SHELL_USER_NAME || "Shell"
+      const user = this.robot.brain.userForId(userId, {
+        name: userName,
+        room: "Shell",
+      })
+      this.receive(new TextMessage(user, input, "messageId"))
     })
 
-    this.cli.command('history', () => {
-      Array.from(this.cli.history()).map(item => console.log(item))
+    this.cli.command("history", () => {
+      Array.from(this.cli.history()).map((item) => console.log(item))
     })
 
-    this.cli.on('history', item => {
-      if (item.length > 0 && item !== 'exit' && item !== 'history') {
-        fs.appendFile(historyPath, `${item}\n`, error => {
+    this.cli.on("history", (item) => {
+      if (item.length > 0 && item !== "exit" && item !== "history") {
+        fs.appendFile(historyPath, `${item}\n`, (error) => {
           if (error) {
-            this.robot.emit('error', error)
+            this.robot.emit("error", error)
           }
         })
       }
     })
 
-    this.cli.on('close', () => {
-      let fileOpts, history, i, item, len, outstream, startIndex
+    this.cli.on("close", () => {
+      let fileOpts
+      let history
+      let i
+      let item
+      let len
+      let outstream
+      let startIndex
 
       history = this.cli.history()
 
@@ -93,15 +105,15 @@ class Shell extends Adapter {
       startIndex = history.length - historySize
       history = history.reverse().splice(startIndex, historySize)
       fileOpts = {
-        mode: 0x180
+        mode: 0x180,
       }
 
       outstream = fs.createWriteStream(historyPath, fileOpts)
-      outstream.on('finish', this.shutdown.bind(this))
+      outstream.on("finish", this.shutdown.bind(this))
 
       for (i = 0, len = history.length; i < len; i++) {
         item = history[i]
-        outstream.write(item + '\n')
+        outstream.write(`${item}\n`)
       }
 
       outstream.end(this.shutdown.bind(this))
@@ -109,14 +121,14 @@ class Shell extends Adapter {
   }
 }
 
-exports.use = robot => new Shell(robot)
+exports.use = (robot) => new Shell(robot)
 
 // load history from .hubot_history.
 //
 // callback - A Function that is called with the loaded history items (or an empty array if there is no history)
-function loadHistory (callback) {
+function loadHistory(callback) {
   if (!fs.existsSync(historyPath)) {
-    return callback(new Error('No history available'))
+    return callback(new Error("No history available"))
   }
 
   const instream = fs.createReadStream(historyPath)
@@ -126,13 +138,14 @@ function loadHistory (callback) {
 
   const items = []
 
-  readline.createInterface({ input: instream, output: outstream, terminal: false })
-    .on('line', function (line) {
+  readline
+    .createInterface({ input: instream, output: outstream, terminal: false })
+    .on("line", (line) => {
       line = line.trim()
       if (line.length > 0) {
         items.push(line)
       }
     })
-    .on('close', () => callback(null, items))
-    .on('error', callback)
+    .on("close", () => callback(null, items))
+    .on("error", callback)
 }

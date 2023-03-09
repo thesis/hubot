@@ -1,9 +1,7 @@
-'use strict'
+import { inspect } from "util"
 
-const inspect = require('util').inspect
-
-const TextMessage = require('./message').TextMessage
-const Middleware = require('./middleware')
+import { TextMessage } from "./message"
+import Middleware from "./middleware"
 
 class Listener {
   // Listeners receive every message from the chat source and decide if they
@@ -17,14 +15,14 @@ class Listener {
   // options  - An Object of additional parameters keyed on extension name
   //            (optional).
   // callback - A Function that is triggered if the incoming message matches.
-  constructor (robot, matcher, options, callback) {
+  constructor(robot, matcher, options, callback) {
     this.robot = robot
     this.matcher = matcher
     this.options = options
     this.callback = callback
 
     if (this.matcher == null) {
-      throw new Error('Missing a matcher for Listener')
+      throw new Error("Missing a matcher for Listener")
     }
 
     if (this.callback == null) {
@@ -36,8 +34,8 @@ class Listener {
       this.options.id = null
     }
 
-    if (this.callback == null || typeof this.callback !== 'function') {
-      throw new Error('Missing a callback for Listener')
+    if (this.callback == null || typeof this.callback !== "function") {
+      throw new Error("Missing a callback for Listener")
     }
   }
 
@@ -53,9 +51,9 @@ class Listener {
   //
   // Returns a boolean of whether the matcher matched.
   // Returns before executing callback
-  call (message, middleware, didMatchCallback) {
+  call(message, middleware, didMatchCallback) {
     // middleware argument is optional
-    if (didMatchCallback == null && typeof middleware === 'function') {
+    if (didMatchCallback == null && typeof middleware === "function") {
       didMatchCallback = middleware
       middleware = undefined
     }
@@ -68,24 +66,30 @@ class Listener {
     const match = this.matcher(message)
     if (match) {
       if (this.regex) {
-        this.robot.logger.debug(`Message '${message}' matched regex /${inspect(this.regex)}/; listener.options = ${inspect(this.options)}`)
+        this.robot.logger.debug(
+          `Message '${message}' matched regex /${inspect(
+            this.regex
+          )}/; listener.options = ${inspect(this.options)}`
+        )
       }
 
       // special middleware-like function that always executes the Listener's
       // callback and calls done (never calls 'next')
       const executeListener = (context, done) => {
-        this.robot.logger.debug(`Executing listener callback for Message '${message}'`)
+        this.robot.logger.debug(
+          `Executing listener callback for Message '${message}'`
+        )
         try {
           this.callback(context.response)
         } catch (err) {
-          this.robot.emit('error', err, context.response)
+          this.robot.emit("error", err, context.response)
         }
         done()
       }
 
       // When everything is finished (down the middleware stack and back up),
       // pass control back to the robot
-      const allDone = function allDone () {
+      const allDone = function allDone() {
         // Yes, we tried to execute the listener callback (middleware may
         // have intercepted before actually executing though)
         if (didMatchCallback != null) {
@@ -96,13 +100,12 @@ class Listener {
       const response = new this.robot.Response(this.robot, message, match)
       middleware.execute({ listener: this, response }, executeListener, allDone)
       return true
-    } else {
-      if (didMatchCallback != null) {
-        // No, we didn't try to execute the listener callback
-        process.nextTick(() => didMatchCallback(false))
-      }
-      return false
     }
+    if (didMatchCallback != null) {
+      // No, we didn't try to execute the listener callback
+      process.nextTick(() => didMatchCallback(false))
+    }
+    return false
   }
 }
 
@@ -116,8 +119,8 @@ class TextListener extends Listener {
   // options  - An Object of additional parameters keyed on extension name
   //            (optional).
   // callback - A Function that is triggered if the incoming message matches.
-  constructor (robot, regex, options, callback) {
-    function matcher (message) {
+  constructor(robot, regex, options, callback) {
+    function matcher(message) {
       if (message instanceof TextMessage) {
         return message.match(regex)
       }
@@ -128,7 +131,4 @@ class TextListener extends Listener {
   }
 }
 
-module.exports = {
-  Listener,
-  TextListener
-}
+export { Listener, TextListener }

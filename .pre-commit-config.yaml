@@ -1,0 +1,9 @@
+repos:
+ - repo: local
+   hooks:
+    - id: lint
+      name: 'lint'
+      entry: /usr/bin/env bash -c "yarn lint"
+      files: '\.tsx?|\.jsx?$'
+      language: script
+      description: "Checks TS and JS code according to the package's linter configuration"
