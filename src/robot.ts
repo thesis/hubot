@@ -757,7 +757,6 @@ class Robot<A extends Adapter> {
     let nextSection
 
     this.logger.debug(`Parsing help for ${path}`)
-    console.log(lines)
 
     for (let i = 0, line; i < lines.length; i++) {
       line = lines[i]
